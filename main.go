@@ -19,15 +19,17 @@ func (key_value *key_value_store) getHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	key_value.mu.RLock()
-	fmt.Fprintf(w, "GET request accepted:\n")
+	//fmt.Fprintf(w, "GET request accepted:\n")
 	identify := mux.Vars(r)
 	key := identify["key"]
-	fmt.Fprintf(w, "For Key: %s,\n", key)
+	//fmt.Fprintf(w, "For Key: %s,\n", key)
 	if _, check := key_value.database[key]; check {
 		value := key_value.database[key]
-		fmt.Fprintf(w, "Value: %s\n", value)
+		//fmt.Fprintf(w, "Value: %s\n", value)
+		w.Write([]byte(fmt.Sprintf(`{"%s": "%s"}`, key, value)))
 	} else {
-		fmt.Fprintf(w, "Key-Value pair does not exist\n")
+		//fmt.Fprintf(w, "Key-Value pair does not exist\n")
+		w.Write([]byte(`{"Error": "Key-Value pair not found"}`))
 	}
 	key_value.mu.RUnlock()
 }
@@ -37,17 +39,19 @@ func (key_value *key_value_store) postHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	key_value.mu.Lock()
-	fmt.Fprintf(w, "POST request accepted:\n")
+	//fmt.Fprintf(w, "POST request accepted:\n")
 	identify := mux.Vars(r)
 	key := identify["key"]
 	value := identify["value"]
-	fmt.Fprintf(w, "For Key: %s,\n", key)
-	fmt.Fprintf(w, "Value: %s\n", value)
+	//fmt.Fprintf(w, "For Key: %s,\n", key)
+	//fmt.Fprintf(w, "Value: %s\n", value)
 	if _, check := key_value.database[key]; !check {
 		key_value.database[key] = value
-		fmt.Fprintf(w, "Key-Value store updated.\n")
+		//fmt.Fprintf(w, "Key-Value store updated.\n")
+		w.Write([]byte(fmt.Sprintf(`{"%s": "%s"}`, key, value)))
 	} else {
-		fmt.Fprintf(w, "Key-Value pair already exists.\n")
+		//fmt.Fprintf(w, "Key-Value pair already exists.\n")
+		w.Write([]byte(`{"Error": "Key-Value pair already exists."}`))
 	}
 	key_value.mu.Unlock()
 }
@@ -56,17 +60,20 @@ func (key_value *key_value_store) putHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
 	key_value.mu.Lock()
-	fmt.Fprintf(w, "PUT request accepted:\n")
+	//fmt.Fprintf(w, "PUT request accepted:\n")
 	identify := mux.Vars(r)
 	key := identify["key"]
 	value := identify["value"]
-	fmt.Fprintf(w, "For Key: %s,\n", key)
+	//fmt.Fprintf(w, "For Key: %s,\n", key)
 	if _, check := key_value.database[key]; check {
 		key_value.database[key] = value
-		fmt.Fprintf(w, "Value: %s\n", value)
-		fmt.Fprintf(w, "Key-Value store updated.\n")
+		//fmt.Fprintf(w, "Value: %s\n", value)
+		//fmt.Fprintf(w, "Key-Value store updated.\n")
+		//w.Write([]byte(`{"Error": "Key-Value pair not found"}`))
+		w.Write([]byte(fmt.Sprintf(`{"%s": "%s"}`, key, value)))
 	} else {
-		fmt.Fprintf(w, "Key-Value pair does not exist.\n")
+		//fmt.Fprintf(w, "Key-Value pair does not exist.\n")
+		w.Write([]byte(`{"Error": "Key-Value pair not found"}`))
 	}
 	key_value.mu.Unlock()
 }
@@ -75,15 +82,16 @@ func (key_value *key_value_store) delHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	key_value.mu.Lock()
-	fmt.Fprintf(w, "DELETE request accepted:\n")
+	//fmt.Fprintf(w, "DELETE request accepted:\n")
 	identify := mux.Vars(r)
 	key := identify["key"]
-	fmt.Fprintf(w, "Key: %s\n", key)
+	//fmt.Fprintf(w, "Key: %s\n", key)
 	if _, check := key_value.database[key]; check {
 		delete(key_value.database, key)
-		fmt.Fprintf(w, "Key-Value pair deleted.")
+		//	fmt.Fprintf(w, "Key-Value pair deleted.")
+		w.Write([]byte(`{"Message": "Key-Value pair deleted."}`))
 	} else {
-		fmt.Fprintf(w, "Key-Value pair does not exist.")
+		w.Write([]byte(`{"Error": "Key-Value pair not found"}`))
 	}
 	key_value.mu.Unlock()
 }
@@ -91,12 +99,12 @@ func (key_value *key_value_store) delHandler(w http.ResponseWriter, r *http.Requ
 func synerror(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprintf(w, "Incorrect Syntax, nothing found")
+	w.Write([]byte(`{"Message": "Not Found"}`))
 }
 
 func (key_value *key_value_store) getExisting(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, "Key-Value pairs:\n")
+	//fmt.Fprintf(w, "Key-Value pairs:\n")
 	json.NewEncoder(w).Encode(key_value.database)
 }
 
